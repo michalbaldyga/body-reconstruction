@@ -25,7 +25,7 @@ Otwórz http://localhost:4173. Na komputerze, na którym przygotowano projekt, m
 
 ## GitHub Pages
 
-Workflow `.github/workflows/pages.yml` testuje i buduje aplikację z bazą `/body-reconstruction/`, następnie publikuje sam wynik budowy. W repozytorium wybierz **Settings → Pages → Source: GitHub Actions**. Publikacja uruchamia się po zmianach gałęzi main lub ręcznie w Actions.
+Workflow `.github/workflows/pages.yml` testuje i buduje aplikację z bazą `/body-reconstruction/`, następnie zapisuje sam wynik w gałęzi `gh-pages` i zleca natywną budowę Pages. Konfiguracja repozytorium: **Settings → Pages → Source: Deploy from a branch → gh-pages → /(root)**. Publikacja uruchamia się po zmianach gałęzi main lub ręcznie w Actions. Plik `.nojekyll` wyłącza przetwarzanie gotowych plików przez Jekyll.
 
 Darmowy GitHub Pages wymaga publicznego repozytorium. Adres docelowy: https://michalbaldyga.github.io/body-reconstruction/ — sam zapis adresu w dokumentacji nie potwierdza udanego wdrożenia; sprawdź wynik workflow.
 

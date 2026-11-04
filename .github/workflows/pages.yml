@@ -4,9 +4,8 @@ on:
     branches: [main]
   workflow_dispatch:
 permissions:
-  contents: read
+  contents: write
   pages: write
-  id-token: write
 concurrency:
   group: pages
   cancel-in-progress: false
@@ -24,17 +23,20 @@ jobs:
       - run: npm run build
         env:
           VITE_BASE_PATH: /body-reconstruction/
-      - uses: actions/configure-pages@v5
-      - uses: actions/upload-pages-artifact@v3
-        with:
-          path: dist
-  deploy:
-    needs: build
-    runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
-      - name: Deploy
-        id: deployment
-        uses: actions/deploy-pages@v5.0.1
+      - name: Publish static branch
+        run: |
+          git fetch origin gh-pages
+          git worktree add "$RUNNER_TEMP/pages-out" origin/gh-pages
+          rsync -a --delete --exclude='.git' dist/ "$RUNNER_TEMP/pages-out/"
+          touch "$RUNNER_TEMP/pages-out/.nojekyll"
+          git -C "$RUNNER_TEMP/pages-out" config user.name "github-actions[bot]"
+          git -C "$RUNNER_TEMP/pages-out" config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git -C "$RUNNER_TEMP/pages-out" add --all
+          if ! git -C "$RUNNER_TEMP/pages-out" diff --cached --quiet; then
+            git -C "$RUNNER_TEMP/pages-out" commit -m "Publish $GITHUB_SHA"
+            git -C "$RUNNER_TEMP/pages-out" push origin HEAD:gh-pages
+          fi
+      - name: Request native Pages build
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh api --method POST "repos/$GITHUB_REPOSITORY/pages/builds"
