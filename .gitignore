@@ -1,0 +1,12 @@
+node_modules/
+dist/
+.tools/
+playwright-report/
+test-results/
+*.local
+private/
+SPECYFIKACJA.md
+.openai/
+*.backup.json
+rehab-*.json
+**/*.private.*
