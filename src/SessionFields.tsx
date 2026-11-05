@@ -1,3 +1,4 @@
+import { useState, type InputHTMLAttributes } from "react";
 import {
   exercises,
   visibleSets,
@@ -5,6 +6,28 @@ import {
   type Session,
   type SetLog,
 } from "./domain";
+function SetNumberInput({
+  value,
+  onValueChange,
+  ...props
+}: Omit<InputHTMLAttributes<HTMLInputElement>, "value" | "onChange"> & {
+  value: number;
+  onValueChange: (value: number) => void;
+}) {
+  const [empty, setEmpty] = useState(false);
+  return (
+    <input
+      {...props}
+      value={empty && value === 0 ? "" : value}
+      onChange={(event) => {
+        const text = event.target.value;
+        setEmpty(text === "");
+        onValueChange(Number(text));
+      }}
+    />
+  );
+}
+
 export function SessionFields({
   session,
   disabled = false,
@@ -66,7 +89,7 @@ export function SessionFields({
                     </label>
                     <label>
                       kg
-                      <input
+                      <SetNumberInput
                         aria-label={`${e.name} seria ${row.index + 1} ciężar`}
                         type="number"
                         min="0"
@@ -74,23 +97,19 @@ export function SessionFields({
                         step="0.5"
                         value={row.weight}
                         disabled={disabled}
-                        onChange={(ev) =>
-                          change({ weight: Number(ev.target.value) })
-                        }
+                        onValueChange={(weight) => change({ weight })}
                       />
                     </label>
                     <label>
                       powt.
-                      <input
+                      <SetNumberInput
                         aria-label={`${e.name} seria ${row.index + 1} powtórzenia`}
                         type="number"
                         min="0"
                         max="50"
                         value={row.reps}
                         disabled={disabled}
-                        onChange={(ev) =>
-                          change({ reps: Number(ev.target.value) })
-                        }
+                        onValueChange={(reps) => change({ reps })}
                       />
                     </label>
                   </div>

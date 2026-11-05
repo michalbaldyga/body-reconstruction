@@ -1,4 +1,4 @@
-﻿import { defineConfig } from "vite";
+import { defineConfig } from "vite";
 import { writeFileSync, readdirSync } from "node:fs";
 const requestedBase = process.env.VITE_BASE_PATH || "/";
 const base = requestedBase.endsWith("/") ? requestedBase : requestedBase + "/";
@@ -23,8 +23,8 @@ export default defineConfig({
             start_url: base,
             scope: base,
             display: "standalone",
-            background_color: "#f4f5ef",
-            theme_color: "#153d35",
+            background_color: "#101917",
+            theme_color: "#101917",
             icons: [192, 512].map((size) => ({
               src: base + "icon-" + size + ".png",
               sizes: size + "x" + size,

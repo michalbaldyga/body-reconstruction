@@ -1,8 +1,9 @@
-﻿@import url("https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap");
 :root {
   font-family: "DM Sans", system-ui, sans-serif;
-  color: #203b32;
-  background: #f4f5ef;
+  color: #e2ece7;
+  background: #101917;
+  color-scheme: dark;
   font-synthesis: none;
   font-weight: 400;
 }
@@ -28,8 +29,8 @@ textarea {
 button {
   border: 0;
   border-radius: 10px;
-  background: #214c3f;
-  color: white;
+  background: #9bdbb4;
+  color: #10241a;
   padding: 14px 20px;
   cursor: pointer;
   font-weight: 600;
@@ -49,7 +50,7 @@ a:focus-visible {
 }
 p {
   line-height: 1.65;
-  color: #647169;
+  color: #afc1b7;
 }
 h1,
 h2,
@@ -74,7 +75,7 @@ h3 {
 }
 em {
   font-style: normal;
-  color: #658064;
+  color: #a9c99b;
 }
 .shell {
   max-width: 1600px;
@@ -87,8 +88,8 @@ aside {
   bottom: 0;
   left: max(0px, calc((100vw - 1600px) / 2));
   width: 254px;
-  background: #fff;
-  border-right: 1px solid #e1e5dd;
+  background: #192622;
+  border-right: 1px solid #34483f;
   padding: 40px 26px;
   z-index: 5;
 }
@@ -98,7 +99,7 @@ aside {
   font-size: 20px;
   line-height: 1.15;
   text-decoration: none;
-  color: #214c3f;
+  color: #9bdbb4;
   padding-left: 44px;
   position: relative;
 }
@@ -109,7 +110,7 @@ aside {
   position: absolute;
   left: 0;
   top: 0;
-  background: #214c3f;
+  background: #9bdbb4;
   border-radius: 10px;
   color: #d7efa8;
   font-size: 28px;
@@ -119,7 +120,7 @@ aside {
   font-size: 10px;
   letter-spacing: 1.6px;
   font-weight: 700;
-  color: #718274;
+  color: #9db1a4;
 }
 aside > .eyebrow {
   font-size: 8px;
@@ -133,7 +134,7 @@ nav {
 nav button {
   text-align: left;
   background: transparent;
-  color: #758177;
+  color: #adc0b3;
   font-size: 14px;
   font-weight: 500;
 }
@@ -143,15 +144,15 @@ nav button span {
   font-size: 20px;
 }
 nav button.selected {
-  background: #edf3e8;
-  color: #214c3f;
+  background: #2b4437;
+  color: #9bdbb4;
   font-weight: 700;
 }
 .local {
   position: absolute;
   bottom: 36px;
   font-size: 11px;
-  color: #627466;
+  color: #a4bcad;
 }
 .local i {
   display: inline-block;
@@ -165,7 +166,7 @@ nav button.selected {
   display: block;
   font-size: 9px;
   margin-top: 9px;
-  color: #8a948a;
+  color: #a2b4a7;
 }
 main {
   max-width: 1150px;
@@ -178,10 +179,10 @@ header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  border-bottom: 1px solid #e1e5dd;
+  border-bottom: 1px solid #34483f;
   font-size: 10px;
   letter-spacing: 1px;
-  color: #778479;
+  color: #a8bbb0;
 }
 .heading {
   margin: 34px 0 28px;
@@ -280,8 +281,8 @@ header {
 }
 article,
 .panel {
-  background: #fff;
-  border: 1px solid #e2e6dc;
+  background: #192622;
+  border: 1px solid #34483f;
   border-radius: 14px;
   padding: 25px;
   margin-bottom: 18px;
@@ -295,7 +296,7 @@ article strong {
 }
 strong small {
   font-size: 13px;
-  color: #7d877d;
+  color: #afc1b7;
   font-weight: 400;
 }
 article p {
@@ -308,7 +309,7 @@ article .eyebrow {
 }
 .text-button {
   background: transparent;
-  color: #42684c;
+  color: #a9d99c;
   padding: 8px 0;
   font-size: 12px;
   text-align: left;
@@ -353,18 +354,18 @@ label {
   flex-direction: column;
   gap: 8px;
   font-size: 12px;
-  color: #5c7161;
+  color: #b2c9ba;
   margin-bottom: 18px;
 }
 input,
 select,
 textarea {
   min-width: 0;
-  border: 1px solid #d8dfd3;
-  background: #fafbf7;
+  border: 1px solid #476052;
+  background: #101c17;
   border-radius: 8px;
   padding: 12px;
-  color: #203b32;
+  color: #e2ece7;
   width: 100%;
   min-height: 44px;
 }
@@ -382,20 +383,20 @@ textarea {
   flex-direction: row;
   align-items: center;
   justify-content: space-between;
-  border-bottom: 1px solid #edf0e7;
+  border-bottom: 1px solid #34483f;
   padding: 12px 0;
 }
 .pain-row select {
   width: 150px;
 }
 .reason {
-  background: #f4f6ef;
+  background: #22342a;
   border-radius: 8px;
   padding: 12px;
 }
 .badge {
   font-size: 10px;
-  background: #eaf0e0;
+  background: #2b4437;
   border-radius: 20px;
   padding: 7px 11px;
   display: inline-block;
@@ -406,7 +407,7 @@ textarea {
   grid-template-columns: 1.5fr 1fr 1fr;
   gap: 12px;
   align-items: center;
-  border-top: 1px solid #edf0e7;
+  border-top: 1px solid #34483f;
   padding-top: 12px;
 }
 .set-row label {
@@ -415,16 +416,16 @@ textarea {
 .set-row label:first-child {
   flex-direction: row;
   align-items: center;
-  color: #294737;
+  color: #d3e5d8;
 }
 .set-row input[type="checkbox"] {
   width: 24px;
   height: 24px;
   min-height: 24px;
-  accent-color: #315c42;
+  accent-color: #9bdbb4;
 }
 .done {
-  background: #f1f6e9;
+  background: #233c2c;
 }
 .actions {
   display: flex;
@@ -432,22 +433,22 @@ textarea {
   flex-wrap: wrap;
 }
 .secondary {
-  background: #e4eadc;
-  color: #214c3f;
+  background: #2b4437;
+  color: #9bdbb4;
 }
 .alert,
 .notice {
   padding: 14px 18px;
-  background: #fff1e5;
-  border: 1px solid #ebcdb2;
+  background: #422e21;
+  border: 1px solid #9b704a;
   border-radius: 10px;
   font-size: 13px;
   line-height: 1.6;
   margin: 16px 0;
 }
 .notice {
-  background: #edf4e4;
-  border-color: #d5e3c4;
+  background: #293e27;
+  border-color: #55704a;
 }
 .history-row {
   display: flex;
@@ -456,7 +457,7 @@ textarea {
   gap: 12px;
 }
 .history-row small {
-  color: #778479;
+  color: #a8bbb0;
 }
 .chart {
   display: flex;
@@ -494,10 +495,10 @@ footer {
   padding: 24px 48px;
   display: flex;
   justify-content: space-between;
-  border-top: 1px solid #e2e6dc;
+  border-top: 1px solid #34483f;
 }
 a {
-  color: #42684c;
+  color: #a9d99c;
 }
 @media (min-width: 1600px) {
   aside {
@@ -574,8 +575,8 @@ a {
     height: calc(70px + env(safe-area-inset-bottom));
     padding: 0 8px env(safe-area-inset-bottom);
     border-right: 0;
-    border-top: 1px solid #dce3d5;
-    background: #fffffff5;
+    border-top: 1px solid #34483f;
+    background: #192622f5;
     backdrop-filter: blur(10px);
   }
   aside .brand,
@@ -709,12 +710,12 @@ a {
 .weekday {
   text-align: center;
   font-size: 12px;
-  color: #718274;
+  color: #9db1a4;
   padding: 12px 0;
 }
 .calendar-day {
-  background: #f5f7f0;
-  color: #294737;
+  background: #22342a;
+  color: #d3e5d8;
   min-height: 68px;
   border: 2px solid transparent;
   padding: 10px 4px;
@@ -725,12 +726,12 @@ a {
   gap: 8px;
 }
 .calendar-day.muted {
-  color: #899285;
-  background: #fafbf8;
+  color: #9eafa1;
+  background: #18221d;
 }
 .calendar-day.chosen {
-  border-color: #315c42;
-  background: #e7efd9;
+  border-color: #9bdbb4;
+  background: #304e34;
 }
 .calendar-day.today > span:first-child {
   font-weight: 800;
@@ -751,13 +752,13 @@ a {
   flex-shrink: 0;
 }
 .training-dot {
-  background: #285647;
+  background: #91d5a7;
 }
 .pain-dot {
   background: #d69a52;
 }
 .active-dot {
-  border: 2px solid #285647;
+  border: 2px solid #91d5a7;
   background: transparent;
 }
 .calendar-legend {
