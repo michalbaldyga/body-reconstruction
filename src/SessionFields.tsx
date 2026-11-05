@@ -6,7 +6,7 @@ import {
   type Session,
   type SetLog,
 } from "./domain";
-function SetNumberInput({
+export function SetNumberInput({
   value,
   onValueChange,
   ...props

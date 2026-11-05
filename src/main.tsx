@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { db, exportBackup, importBackup } from "./db";
 import {
@@ -15,7 +15,7 @@ import {
   type Dose,
 } from "./domain";
 import "./style.css";
-import { SessionFields } from "./SessionFields";
+import { SessionFields, SetNumberInput } from "./SessionFields";
 import { Calendar } from "./Calendar";
 import {
   visibleSets,
@@ -670,26 +670,26 @@ function App() {
                           <div className="grid two">
                             <label>
                               Ciężar {e.id === "calf" ? "dodatkowy " : ""}(kg)
-                              <input
+                              <SetNumberInput
                                 type="number"
                                 min="0"
                                 max="500"
                                 step="0.5"
                                 value={draft[e.id].weight}
-                                onChange={(ev) =>
-                                  setDose(e.id, "weight", ev.target.value)
+                                onValueChange={(value) =>
+                                  setDose(e.id, "weight", String(value))
                                 }
                               />
                             </label>
                             <label>
                               Powtórzenia w serii
-                              <input
+                              <SetNumberInput
                                 type="number"
                                 min="1"
                                 max="50"
                                 value={draft[e.id].reps}
-                                onChange={(ev) =>
-                                  setDose(e.id, "reps", ev.target.value)
+                                onValueChange={(value) =>
+                                  setDose(e.id, "reps", String(value))
                                 }
                               />
                             </label>
