@@ -1,4 +1,4 @@
-import { useState, type InputHTMLAttributes } from "react";
+import { type InputHTMLAttributes } from "react";
 import {
   exercises,
   visibleSets,
@@ -14,14 +14,12 @@ export function SetNumberInput({
   value: number;
   onValueChange: (value: number) => void;
 }) {
-  const [empty, setEmpty] = useState(false);
   return (
     <input
       {...props}
-      value={empty && value === 0 ? "" : value}
+      value={value === 0 ? "" : value}
       onChange={(event) => {
         const text = event.target.value;
-        setEmpty(text === "");
         onValueChange(Number(text));
       }}
     />

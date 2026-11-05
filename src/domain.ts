@@ -45,7 +45,7 @@ export const exercises = [
 export type Exercise = (typeof exercises)[number];
 export const doseSchema = z.object({
   weight: z.number().min(0).max(500),
-  reps: z.number().int().min(1).max(50),
+  reps: z.number().int().min(0).max(50),
 });
 export type Dose = z.infer<typeof doseSchema>;
 const painSchema = z.number().int().min(0).max(10);

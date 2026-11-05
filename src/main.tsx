@@ -685,7 +685,7 @@ function App() {
                               Powtórzenia w serii
                               <SetNumberInput
                                 type="number"
-                                min="1"
+                                min="0"
                                 max="50"
                                 value={draft[e.id].reps}
                                 onValueChange={(value) =>

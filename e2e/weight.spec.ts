@@ -12,7 +12,7 @@ test("ciężar można wyczyścić, wpisać od nowa i zachować po odświeżeniu"
   const weight = page.getByLabel("Wspięcia na palce seria 1 ciężar", {
     exact: true,
   });
-  await expect(weight).toHaveValue("0");
+  await expect(weight).toHaveValue("");
   await weight.fill("");
   await expect(weight).toBeEnabled();
   await expect(weight).toHaveValue("");
@@ -33,7 +33,7 @@ for (const touch of [false, true]) {
       await page.goto("./");
       await page.getByRole("button", { name: "Trening", exact: true }).click();
       const weight = page.getByLabel("Ciężar dodatkowy (kg)");
-      await expect(weight).toHaveValue("0");
+      await expect(weight).toHaveValue("");
       if (touch) await weight.tap();
       else await weight.click();
       await weight.press("End");
@@ -55,3 +55,29 @@ for (const touch of [false, true]) {
     });
   });
 }
+
+test("puste pola nie blokują rozpoczęcia treningu i pozostają puste po odświeżeniu", async ({
+  page,
+}) => {
+  await page.goto("./");
+  await page.getByRole("button", { name: "Trening", exact: true }).click();
+  for (const field of await page.locator('input[type="number"]').all()) {
+    await field.fill("");
+    await field.blur();
+    await expect(field).toHaveValue("");
+  }
+  await page
+    .getByRole("button", { name: "Zatwierdź dawki i rozpocznij" })
+    .click();
+  await expect(
+    page.getByRole("heading", { name: "Twój trening trwa" }),
+  ).toBeVisible();
+  for (const field of await page.locator('input[type="number"]').all()) {
+    await expect(field).toHaveValue("");
+  }
+  await page.reload();
+  await page.getByRole("button", { name: "Trening", exact: true }).click();
+  for (const field of await page.locator('input[type="number"]').all()) {
+    await expect(field).toHaveValue("");
+  }
+});
