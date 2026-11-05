@@ -1,4 +1,4 @@
-﻿import { test, expect } from "@playwright/test";
+import { test, expect } from "@playwright/test";
 test("poranny wpis, wznowienie i ukończenie sesji, kopia oraz offline", async ({
   page,
   context,
@@ -44,6 +44,7 @@ test("poranny wpis, wznowienie i ukończenie sesji, kopia oraz offline", async (
   await expect(page.getByRole("checkbox")).toHaveCount(12);
   await page.getByRole("checkbox").first().check();
   await expect(page.getByText(/1\/12 serii/)).toBeVisible();
+  await expect(page.getByRole("checkbox").first()).toBeEnabled();
   await page.reload();
   await page.getByRole("button", { name: "Trening", exact: true }).click();
   await expect(page.getByRole("checkbox").first()).toBeChecked();

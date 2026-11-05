@@ -4,6 +4,13 @@ import { db, exportBackup, importBackup } from "./db";
 import {
   sites,
   exercises,
+  exerciseCatalog,
+  defaultTemplate,
+  templateSchema,
+  sessionExercises,
+  sessionPlan,
+  replaceSessionExercise,
+  type WorkoutTemplate,
   day,
   suggest,
   newSession,
@@ -12,10 +19,10 @@ import {
   backupSchema,
   type PainLog,
   type Session,
-  type Dose,
 } from "./domain";
 import "./style.css";
-import { SessionFields, SetNumberInput } from "./SessionFields";
+import { SessionFields } from "./SessionFields";
+import { Plans, PlanComposer } from "./Plans";
 import { Calendar } from "./Calendar";
 import {
   visibleSets,
@@ -58,19 +65,22 @@ function App() {
     [pain, setPain] = useState(["", "", ""]),
     [context, setContext] = useState("spacer"),
     [note, setNote] = useState("");
-  const [draft, setDraft] = useState<Record<string, Dose>>(
-    Object.fromEntries(
-      exercises.map((e) => [e.id, { weight: e.weight, reps: e.reps }]),
-    ),
-  );
+  const [templates, setTemplates] = useState<WorkoutTemplate[]>([]);
+  const [workout, setWorkout] = useState<WorkoutTemplate>(defaultTemplate);
+  const [planDirty, setPlanDirty] = useState(false);
+  const [historyExercise, setHistoryExercise] = useState("");
   const [editing, setEditing] = useState<Session | null>(null);
   const [editStart, setEditStart] = useState(""),
     [editEnd, setEditEnd] = useState("");
   const [editingExisting, setEditingExisting] = useState(false);
   function navigate(next: string) {
+    if (next === tab) return;
+    if (planDirty && !confirm("Odrzucić niezapisane zmiany planu?")) return;
+    setPlanDirty(false);
     if (editing && !confirm("Odrzucić niezapisane zmiany treningu?")) return;
     setEditing(null);
     setTab(next);
+    setNotice("");
     setError("");
   }
   function openSessionEditor(session?: Session, dateValue = day(new Date())) {
@@ -85,7 +95,10 @@ function App() {
     const start = new Date(end.getTime() - 3600e3);
     const initial = session
       ? structuredClone(session)
-      : { ...newSession(draft, start.toISOString()), ended: end.toISOString() };
+      : {
+          ...newSession({}, start.toISOString(), workout),
+          ended: end.toISOString(),
+        };
     if (!session)
       initial.sets = initial.sets.map((row) => ({ ...row, done: true }));
     setEditing(initial);
@@ -143,23 +156,15 @@ function App() {
     const stored = await db.sessions.orderBy("started").toArray();
     setLogs(await db.logs.orderBy("date").toArray());
     setSessions(stored);
-    if (!ready) {
-      const last = stored.filter((s) => s.ended).at(-1);
-      if (last)
-        setDraft(
-          Object.fromEntries(
-            exercises.map((e) => {
-              const row = last.sets.find((x) => x.exerciseId === e.id);
-              return [
-                e.id,
-                row
-                  ? { weight: row.weight, reps: row.reps }
-                  : { weight: e.weight, reps: e.reps },
-              ];
-            }),
-          ),
-        );
-    }
+    const savedTemplates = await db.templates.toArray();
+    setTemplates(savedTemplates);
+    if (!ready && savedTemplates.length)
+      setWorkout(
+        structuredClone(
+          savedTemplates.find((t) => t.id === "original-plan") ??
+            savedTemplates[0],
+        ),
+      );
     setReady(true);
   }
   useEffect(() => {
@@ -234,26 +239,13 @@ function App() {
       setNotice("Pomiar zapisany na tym urządzeniu.");
     });
   }
-  function setDose(id: string, key: keyof Dose, value: string) {
-    setDraft((v) => ({ ...v, [id]: { ...v[id], [key]: Number(value) } }));
-  }
   async function begin() {
     await action(async () => {
       if (hours < 72) throw Error("Od ostatniej sesji nie minęły 72 godziny.");
-      const s = sessionSchema.parse({
-        ...newSession(draft),
-        decision: JSON.stringify({
-          generatedAt: new Date().toISOString(),
-          logs: logs.slice(-14),
-          suggestions: exercises.map((e) => ({
-            exerciseId: e.id,
-            ...suggest(e, sessions, logs),
-          })),
-          chosen: draft,
-        }),
-      });
-      await db.sessions.add(s);
-      setTab("Trening");
+      const selected = templateSchema.parse(workout);
+      await db.sessions.add(
+        sessionSchema.parse(newSession({}, new Date().toISOString(), selected)),
+      );
     });
   }
   async function updateTraining(next: Session) {
@@ -294,6 +286,8 @@ function App() {
       )
         return;
       await importBackup(data);
+      const restored = await db.templates.toArray();
+      setWorkout(structuredClone(restored[0] ?? defaultTemplate()));
       setNotice("Kopia odtworzona.");
     });
   }
@@ -313,7 +307,7 @@ function App() {
             "Dziennik",
             "Kalendarz",
             "Historia",
-            "Plan",
+            "Plany",
             "Dane",
           ].map((t, i) => (
             <button
@@ -329,7 +323,7 @@ function App() {
         </nav>
         <div className="local">
           <i /> Dane na tym urządzeniu
-          <small>Wersja 0.2 · bez konta i chmury</small>
+          <small>Wersja 0.3 · bez konta i chmury</small>
         </div>
       </aside>
       <main>
@@ -378,7 +372,7 @@ function App() {
                   <div>
                     <span className="pill">TWÓJ PLAN STARTOWY</span>
                     <h2>
-                      Cztery ćwiczenia.
+                      Twój własny plan.
                       <br />
                       Jeden krok dalej.
                     </h2>
@@ -582,14 +576,31 @@ function App() {
                 {active ? (
                   <>
                     <p className="badge">
-                      Rozpoczęto{" "}
+                      {active.planName ?? "Plan początkowy"} · Rozpoczęto{" "}
                       {new Date(active.started).toLocaleString("pl-PL")} ·{" "}
-                      {completedGroups(active)}/12 serii
+                      {completedGroups(active)}/{visibleSets(active).length}{" "}
+                      serii
                     </p>
                     <SessionFields
                       session={active}
                       disabled={busy}
                       onChange={updateTraining}
+                      onReplace={(from, to) =>
+                        action(async () => {
+                          if (
+                            active.sets.some(
+                              (row) => row.exerciseId === from && row.done,
+                            ) &&
+                            !confirm(
+                              "Zamiana usunie wykonane serie tego ćwiczenia z bieżącego treningu. Kontynuować?",
+                            )
+                          )
+                            return;
+                          await db.sessions.put(
+                            replaceSessionExercise(active, from, to),
+                          );
+                        })
+                      }
                     />
                     <div className="actions">
                       <button
@@ -635,69 +646,103 @@ function App() {
                         ? `Pozostało ${Math.ceil(72 - hours)} h do minimalnego odstępu.`
                         : "Minimalny odstęp spełniony. Wybieraj dwa dni w tygodniu; nie trenuj automatycznie co 72 h."}
                     </div>
-                    {exercises.map((e) => {
-                      const rec = suggest(e, sessions, logs);
-                      return (
-                        <section className="panel" key={e.id}>
-                          <div className="section-title">
-                            <h2>{e.name}</h2>
-                            <span className="badge">{rec.status}</span>
-                          </div>
-                          <p>
-                            {e.detail} · 3 serie{" "}
-                            {e.unilateral ? "na każdą nogę" : ""}
-                          </p>
-                          <p className="reason">{rec.reason}</p>
-                          {rec.dose && (
-                            <button
-                              className="text-button"
-                              onClick={() => {
-                                if (
-                                  confirm(
-                                    "Potwierdzasz tolerancję, brak utrzymującego się pogorszenia i wybór tej propozycji?",
-                                  )
-                                )
-                                  setDraft((v) => ({
-                                    ...v,
-                                    [e.id]: rec.dose!,
-                                  }));
-                              }}
-                            >
-                              Zastosuj: {weight(rec.dose.weight)} · 3 ×{" "}
-                              {rec.dose.reps} →
-                            </button>
-                          )}
-                          <div className="grid two">
-                            <label>
-                              Ciężar {e.id === "calf" ? "dodatkowy " : ""}(kg)
-                              <SetNumberInput
-                                type="number"
-                                min="0"
-                                max="500"
-                                step="0.5"
-                                value={draft[e.id].weight}
-                                onValueChange={(value) =>
-                                  setDose(e.id, "weight", String(value))
-                                }
-                              />
-                            </label>
-                            <label>
-                              Powtórzenia w serii
-                              <SetNumberInput
-                                type="number"
-                                min="0"
-                                max="50"
-                                value={draft[e.id].reps}
-                                onValueChange={(value) =>
-                                  setDose(e.id, "reps", String(value))
-                                }
-                              />
-                            </label>
-                          </div>
-                        </section>
-                      );
-                    })}
-                    <button disabled={busy || hours < 72} onClick={begin}>
+                    <section className="panel">
+                      <label>
+                        Szablon treningu
+                        <select
+                          value={
+                            templates.some((t) => t.id === workout.id)
+                              ? workout.id
+                              : ""
+                          }
+                          onChange={(event) => {
+                            const template = templates.find(
+                              (t) => t.id === event.target.value,
+                            );
+                            if (
+                              template &&
+                              confirm(
+                                "Wczytać szablon? Bieżące przygotowanie treningu zostanie zastąpione.",
+                              )
+                            )
+                              setWorkout(structuredClone(template));
+                          }}
+                        >
+                          <option value="" disabled>
+                            Własny trening
+                          </option>
+                          {templates.map((t) => (
+                            <option key={t.id} value={t.id}>
+                              {t.name}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                      <p>
+                        Zmiany poniżej dotyczą tylko tego treningu. Szablony
+                        edytujesz w zakładce Plany. Po zamianie ćwiczenia ustaw
+                        ciężar i powtórzenia od nowa.
+                      </p>
+                    </section>
+                    <PlanComposer
+                      entries={workout.entries}
+                      onChange={(entries) =>
+                        setWorkout({ ...workout, entries })
+                      }
+                    />
+                    <details className="panel">
+                      <summary>
+                        Propozycje dla ćwiczeń z planu początkowego
+                      </summary>
+                      {workout.entries
+                        .filter((entry) =>
+                          exercises.some((e) => e.id === entry.exerciseId),
+                        )
+                        .map((entry) => {
+                          const exercise = exercises.find(
+                            (e) => e.id === entry.exerciseId,
+                          )!;
+                          const rec = suggest(exercise, sessions, logs);
+                          return (
+                            <div key={entry.exerciseId}>
+                              <h3>{exercise.name}</h3>
+                              <p>{rec.reason}</p>
+                              {rec.dose && entry.sets === 3 && (
+                                <button
+                                  type="button"
+                                  className="text-button"
+                                  onClick={() => {
+                                    if (
+                                      confirm(
+                                        "Potwierdzasz tolerancję, brak utrzymującego się pogorszenia i wybór tej propozycji?",
+                                      )
+                                    )
+                                      setWorkout({
+                                        ...workout,
+                                        entries: workout.entries.map((e) =>
+                                          e.exerciseId === entry.exerciseId
+                                            ? { ...e, ...rec.dose! }
+                                            : e,
+                                        ),
+                                      });
+                                  }}
+                                >
+                                  Zastosuj: {weight(rec.dose.weight)} · 3 ×{" "}
+                                  {rec.dose.reps}
+                                </button>
+                              )}
+                            </div>
+                          );
+                        })}
+                      <p>
+                        Nowe ćwiczenia: ręczne ustawianie obciążeń, bez
+                        automatycznej progresji.
+                      </p>
+                    </details>
+                    <button
+                      disabled={busy || hours < 72 || !workout.entries.length}
+                      onClick={begin}
+                    >
                       Zatwierdź dawki i rozpocznij
                     </button>
                     <p className="footnote">
@@ -775,6 +820,14 @@ function App() {
                     session={editing}
                     disabled={busy}
                     onChange={setEditing}
+                    onReplace={(from, to) => {
+                      if (
+                        confirm(
+                          "Zastąpić ćwiczenie w tym wpisie? Jego serie trzeba będzie uzupełnić ponownie.",
+                        )
+                      )
+                        setEditing(replaceSessionExercise(editing, from, to));
+                    }}
                   />
                   <div className="actions">
                     <button disabled={busy}>Zapisz trening</button>
@@ -877,103 +930,104 @@ function App() {
                 ))}
                 <h2>Treningi</h2>
                 {!sessions.length && <p>Jeszcze bez treningów.</p>}
-                {[...sessions].reverse().map((s) => (
-                  <details className="panel" key={s.id}>
-                    <summary>
-                      {fmt(s.started)} · {s.ended ? "Ukończony" : "W trakcie"} ·{" "}
-                      {completedGroups(s)}/12 serii
-                    </summary>
-                    {exercises.map((e) => (
-                      <p key={e.id}>
-                        <b>{e.name}</b>
-                        <br />
-                        {visibleSets(s)
-                          .filter((x) => x.exerciseId === e.id)
-                          .map(
-                            (x) =>
-                              `${e.unilateral ? "L+P" : "Obunóż"} ${x.weight} kg × ${x.reps}${x.done ? " ✓" : ""}`,
-                          )
-                          .join(" · ")}
-                      </p>
-                    ))}
-                    {s.note && <p>{s.note}</p>}
-                    {s.editedAt && (
-                      <p className="footnote">
-                        Poprawiono:{" "}
-                        {new Date(s.editedAt).toLocaleString("pl-PL")}
-                      </p>
-                    )}
-                    <button
-                      className="secondary"
-                      onClick={() => openSessionEditor(s)}
-                    >
-                      {s.ended ? "Edytuj trening" : "Wznów trening"}
-                    </button>
-                  </details>
-                ))}
+                <label>
+                  Filtr ćwiczenia w historii
+                  <select
+                    aria-label="Filtr ćwiczenia w historii"
+                    value={historyExercise}
+                    onChange={(event) => setHistoryExercise(event.target.value)}
+                  >
+                    <option value="">Wszystkie ćwiczenia</option>
+                    {exerciseCatalog
+                      .filter((e) =>
+                        sessions.some((s) =>
+                          s.sets.some((row) => row.exerciseId === e.id),
+                        ),
+                      )
+                      .map((e) => (
+                        <option key={e.id} value={e.id}>
+                          {e.name}
+                        </option>
+                      ))}
+                  </select>
+                </label>
+                {historyExercise &&
+                  !sessions.some((s) =>
+                    s.sets.some((row) => row.exerciseId === historyExercise),
+                  ) && <p>Brak treningów tego ćwiczenia.</p>}
+                {[...sessions]
+                  .filter(
+                    (s) =>
+                      !historyExercise ||
+                      s.sets.some((row) => row.exerciseId === historyExercise),
+                  )
+                  .reverse()
+                  .map((s) => (
+                    <details className="panel" key={s.id}>
+                      <summary>
+                        {fmt(s.started)} · {s.planName ?? "Plan początkowy"} ·{" "}
+                        {s.ended ? "Ukończony" : "W trakcie"} ·{" "}
+                        {completedGroups(s)}/{visibleSets(s).length} serii
+                      </summary>
+                      {sessionExercises(s)
+                        .filter(
+                          (e) => !historyExercise || e.id === historyExercise,
+                        )
+                        .map((e) => (
+                          <p key={e.id}>
+                            <b>{e.name}</b>
+                            <br />
+                            {sessionPlan(s).find(
+                              (entry) => entry.exerciseId === e.id,
+                            )?.note && (
+                              <span>
+                                {
+                                  sessionPlan(s).find(
+                                    (entry) => entry.exerciseId === e.id,
+                                  )?.note
+                                }
+                                <br />
+                              </span>
+                            )}
+                            {visibleSets(s)
+                              .filter((x) => x.exerciseId === e.id)
+                              .map(
+                                (x) =>
+                                  `${e.unilateral ? "L+P" : "Obunóż"} ${x.weight} kg × ${x.reps}${x.done ? " ✓" : ""}`,
+                              )
+                              .join(" · ")}
+                          </p>
+                        ))}
+                      {s.note && <p>{s.note}</p>}
+                      {s.editedAt && (
+                        <p className="footnote">
+                          Poprawiono:{" "}
+                          {new Date(s.editedAt).toLocaleString("pl-PL")}
+                        </p>
+                      )}
+                      <button
+                        className="secondary"
+                        onClick={() => openSessionEditor(s)}
+                      >
+                        {s.ended ? "Edytuj trening" : "Wznów trening"}
+                      </button>
+                    </details>
+                  ))}
               </>
             )}
-            {tab === "Plan" && (
-              <>
-                <h1>Plan, który znasz</h1>
-                <p className="intro">
-                  Dwie sesje w tygodniu, minimum 72 godziny odstępu. Wszystkie
-                  cztery ćwiczenia na każdej sesji.
-                </p>
-                {exercises.map((e) => (
-                  <article key={e.id}>
-                    <span className="eyebrow">{e.detail}</span>
-                    <h2>{e.name}</h2>
-                    <strong>
-                      3 × {e.reps}
-                      <small> · {weight(e.weight)}</small>
-                    </strong>
-                    <p>
-                      {e.id === "calf"
-                        ? "Najpierw +1 powtórzenie na stabilny tydzień do 8. Potem +2 kg i powrót do 6; przy stabilnej reakcji następna sesja 8."
-                        : `6 → 8 powtórzeń, potem +${e.step.toLocaleString("pl-PL")} kg i powrót do 6.`}
-                    </p>
-                  </article>
-                ))}
-                <section className="panel">
-                  <h2>Reguły reakcji</h2>
-                  <p>
-                    +1 punkt przy bazie ≤2: reakcja akceptowana. Przy bazie ≥3:
-                    bez progresji.
-                  </p>
-                  <p>
-                    +2 punkty raz: utrzymanie. Dwa kolejne wzrosty +2:
-                    propozycja powrotu do ostatniej tolerowanej dawki.
-                  </p>
-                  <p>
-                    Więcej niż +2: blokada progresji i ocena utrzymywania się
-                    objawów. ≥3 punkty ponad 24 godziny: przegląd i propozycja
-                    regresji, bez czekania na drugą sesję.
-                  </p>
-                  <p className="footnote">
-                    Reguły indywidualne i ekstrapolacje, nie uniwersalny
-                    protokół leczenia. Automatyczna ocena jest zachowawcza;
-                    reakcja &gt;2 i złożone przypadki wymagają ręcznej decyzji.
-                    PHT:{" "}
-                    <a
-                      href="https://doi.org/10.26603/001c.138308"
-                      target="_blank"
-                      rel="noreferrer"
-                    >
-                      protokół 2025
-                    </a>
-                    . Achilles:{" "}
-                    <a
-                      href="https://pubmed.ncbi.nlm.nih.gov/40011018/"
-                      target="_blank"
-                      rel="noreferrer"
-                    >
-                      RCT 2025
-                    </a>
-                    .
-                  </p>
-                </section>
-              </>
+            {tab === "Plany" && (
+              <Plans
+                templates={templates}
+                onDirty={setPlanDirty}
+                onSave={async (template) => {
+                  await db.templates.put(templateSchema.parse(template));
+                  await refresh();
+                }}
+                onDelete={async (id) => {
+                  await db.templates.delete(id);
+                  await refresh();
+                }}
+              />
             )}
             {tab === "Dane" && (
               <>
@@ -986,7 +1040,8 @@ function App() {
                 <section className="panel">
                   <h2>Kopia zapasowa</h2>
                   <p>
-                    {logs.length} pomiarów · {sessions.length} treningów
+                    {logs.length} pomiarów · {sessions.length} treningów ·{" "}
+                    {templates.length} planów
                   </p>
                   <p>
                     Ostatni eksport:{" "}

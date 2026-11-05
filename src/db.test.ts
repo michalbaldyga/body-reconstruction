@@ -44,3 +44,55 @@ describe("Baza i kopie", () => {
     expect(await db.logs.count()).toBe(1);
   });
 });
+
+it("eksportuje i przywraca plany razem z niezależną sesją", async () => {
+  const { defaultTemplate } = await import("./domain");
+  const template = { ...defaultTemplate(), id: "lower-a", name: "Lower A" };
+  await db.templates.clear();
+  await db.templates.add(template);
+  const session = newSession({}, undefined, template);
+  await db.sessions.add(session);
+  const backup = await exportBackup();
+  await db.templates.update(template.id, { name: "Zmieniony" });
+  await importBackup(backup);
+  expect(await db.templates.toArray()).toEqual([template]);
+  expect((await db.sessions.get(session.id))?.planName).toBe("Lower A");
+  expect(backup.version).toBe(2);
+});
+
+it("importuje kopię v1 i dodaje plan początkowy bez zmiany historii", async () => {
+  const { defaultTemplate } = await import("./domain");
+  const oldSession = newSession(
+    Object.fromEntries(
+      exercises.map((e) => [e.id, { weight: e.weight, reps: e.reps }]),
+    ),
+  );
+  await importBackup({
+    version: 1,
+    exportedAt: new Date().toISOString(),
+    logs: [],
+    sessions: [oldSession],
+  });
+  expect(await db.sessions.toArray()).toEqual([oldSession]);
+  expect(await db.templates.toArray()).toEqual([defaultTemplate()]);
+});
+
+it("nie usuwa danych po błędnym planie w kopii v2", async () => {
+  await db.templates.put({
+    id: "keep",
+    name: "Zachowaj",
+    entries: [
+      { exerciseId: "leg-press", sets: 3, reps: 8, weight: 0, note: "" },
+    ],
+  });
+  await expect(
+    importBackup({
+      version: 2,
+      exportedAt: new Date().toISOString(),
+      logs: [],
+      sessions: [],
+      templates: [{ id: "bad", name: "", entries: [] }],
+    }),
+  ).rejects.toThrow();
+  expect(await db.templates.get("keep")).toBeDefined();
+});

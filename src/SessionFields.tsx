@@ -1,45 +1,45 @@
-import { type InputHTMLAttributes } from "react";
+import { ExercisePicker } from "./Plans";
+import { SetNumberInput } from "./SetNumberInput";
 import {
-  exercises,
+  sessionExercises,
+  sessionPlan,
   visibleSets,
   updatePairedSet,
   type Session,
   type SetLog,
 } from "./domain";
-export function SetNumberInput({
-  value,
-  onValueChange,
-  ...props
-}: Omit<InputHTMLAttributes<HTMLInputElement>, "value" | "onChange"> & {
-  value: number;
-  onValueChange: (value: number) => void;
-}) {
-  return (
-    <input
-      {...props}
-      value={value === 0 ? "" : value}
-      onChange={(event) => {
-        const text = event.target.value;
-        onValueChange(Number(text));
-      }}
-    />
-  );
-}
-
 export function SessionFields({
   session,
   disabled = false,
   onChange,
+  onReplace,
 }: {
   session: Session;
   disabled?: boolean;
   onChange: (next: Session) => void;
+  onReplace?: (from: string, to: string) => void;
 }) {
   return (
     <>
-      {exercises.map((e) => (
+      {sessionExercises(session).map((e) => (
         <section className="panel" key={e.id}>
           <h2>{e.name}</h2>
+          {sessionPlan(session).find((entry) => entry.exerciseId === e.id)
+            ?.note && (
+            <p className="reason">
+              {
+                sessionPlan(session).find((entry) => entry.exerciseId === e.id)
+                  ?.note
+              }
+            </p>
+          )}
+          {onReplace && !disabled && (
+            <ExercisePicker
+              label={`Zamień: ${e.name}`}
+              excluded={sessionExercises(session).map((e) => e.id)}
+              onPick={(id) => onReplace(e.id, id)}
+            />
+          )}
           <p>
             {e.detail}
             {e.unilateral ? " · jeden wpis dotyczy obu nóg" : ""}

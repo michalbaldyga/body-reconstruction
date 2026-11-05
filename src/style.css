@@ -793,3 +793,67 @@ a {
     flex-wrap: wrap;
   }
 }
+
+.plan-fieldset {
+  border: 0;
+  margin: 0;
+  padding: 0;
+  min-width: 0;
+}
+.template-list {
+  margin-top: 24px;
+}
+.exercise-picker {
+  margin-bottom: 16px;
+  min-width: 0;
+}
+.exercise-library {
+  margin-top: 16px;
+  padding: 16px;
+  border: 1px solid #476052;
+  border-radius: 12px;
+  background: #101c17;
+}
+.exercise-results {
+  display: grid;
+  gap: 8px;
+  max-height: 360px;
+  overflow-y: auto;
+}
+.exercise-option {
+  text-align: left;
+  overflow-wrap: anywhere;
+}
+.exercise-option strong,
+.exercise-option span {
+  display: block;
+}
+.exercise-option span {
+  font-size: 12px;
+  font-weight: 400;
+  margin-top: 6px;
+  line-height: 1.5;
+}
+.plan-actions {
+  align-items: flex-start;
+  margin-bottom: 12px;
+}
+.plan-actions .exercise-picker {
+  margin: 0;
+  flex: 1 1 200px;
+}
+.plan-actions .exercise-picker > button {
+  width: 100%;
+}
+@media (max-width: 700px) {
+  .plan-numbers {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+  }
+  .plan-numbers input {
+    padding: 10px 6px;
+  }
+  .plan-numbers label {
+    font-size: 11px;
+  }
+}
