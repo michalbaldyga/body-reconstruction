@@ -22,7 +22,7 @@ test("aktualizacja w otwartej aplikacji zachowuje zapisany trening i działa pon
     const first = page.getByRole("checkbox").first();
     await first.check();
     await expect(first).toBeEnabled();
-    await page.getByRole("button", { name: "Dzisiaj", exact: true }).click();
+    await page.getByRole("button", { name: "Dane", exact: true }).click();
     await context.setOffline(true);
     await page
       .getByRole("button", { name: "Odśwież aplikację", exact: true })
@@ -67,16 +67,25 @@ test("aktualizacja w otwartej aplikacji zachowuje zapisany trening i działa pon
   }
 });
 
-test("odświeżenie można anulować przy niezapisanym planie", async ({
+test("przycisk jest zawsze w Danych i nie występuje w innych zakładkach", async ({
   page,
 }) => {
   await page.goto("./");
+  const button = page.getByRole("button", {
+    name: "Odśwież aplikację",
+    exact: true,
+  });
+  await expect(button).toHaveCount(0);
+  await page.getByRole("button", { name: "Dane", exact: true }).click();
+  await expect(button).toBeVisible();
+  await expect(button).toBeEnabled();
+  await expect(page.locator("main section.panel").last()).toContainText(
+    "Aktualizacja aplikacji",
+  );
+  await page.getByRole("button", { name: "Trening", exact: true }).click();
+  await expect(button).toHaveCount(0);
   await page.getByRole("button", { name: "Plany", exact: true }).click();
-  await page.getByRole("button", { name: "Nowy plan", exact: true }).click();
-  await page.getByLabel("Nazwa planu").fill("Niezapisany plan");
-  page.once("dialog", (dialog) => dialog.dismiss());
-  await page
-    .getByRole("button", { name: "Odśwież aplikację", exact: true })
-    .click();
-  await expect(page.getByLabel("Nazwa planu")).toHaveValue("Niezapisany plan");
+  await expect(button).toHaveCount(0);
+  await page.getByRole("button", { name: "Dane", exact: true }).click();
+  await expect(button).toBeVisible();
 });

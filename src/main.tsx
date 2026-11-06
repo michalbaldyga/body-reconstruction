@@ -337,15 +337,6 @@ function App() {
             {notice}
           </div>
         )}
-        <AppUpdater
-          disabled={busy || !ready}
-          hasUnsavedChanges={
-            !!editing ||
-            planDirty ||
-            tab === "Dziennik" ||
-            (tab === "Trening" && !active)
-          }
-        />
         {!ready ? (
           <p>Otwieranie lokalnej bazy…</p>
         ) : (
@@ -1095,6 +1086,14 @@ function App() {
                     jest adres HTTPS. Szczegóły testowania znajdziesz w README
                     projektu.
                   </p>
+                </section>
+                <section className="panel">
+                  <h2>Aktualizacja aplikacji</h2>
+                  <p>
+                    Sprawdź dostępność nowej wersji i odśwież aplikację.
+                    Zapisane treningi i plany pozostaną na urządzeniu.
+                  </p>
+                  <AppUpdater disabled={busy} hasUnsavedChanges={false} />
                 </section>
               </>
             )}
