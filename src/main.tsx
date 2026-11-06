@@ -23,6 +23,7 @@ import {
 import "./style.css";
 import { SessionFields } from "./SessionFields";
 import { Plans, PlanComposer } from "./Plans";
+import { AppUpdater } from "./AppUpdater";
 import { Calendar } from "./Calendar";
 import {
   visibleSets,
@@ -37,14 +38,7 @@ if (import.meta.env.PROD && "serviceWorker" in navigator)
   navigator.serviceWorker
     .register(import.meta.env.BASE_URL + "sw.js", {
       scope: import.meta.env.BASE_URL,
-    })
-    .then((reg) => {
-      reg.addEventListener("updatefound", () =>
-        reg.installing?.addEventListener("statechange", () => {
-          if (reg.waiting && navigator.serviceWorker.controller)
-            window.dispatchEvent(new Event("app-update"));
-        }),
-      );
+      updateViaCache: "none",
     })
     .catch(() => {});
 const fmt = (d: string) =>
@@ -58,7 +52,6 @@ function App() {
     [error, setError] = useState(""),
     [ready, setReady] = useState(false),
     [notice, setNotice] = useState(""),
-    [update, setUpdate] = useState(false),
     [busy, setBusy] = useState(false);
   const [date, setDate] = useState(day(new Date())),
     [time, setTime] = useState("08:00"),
@@ -173,9 +166,6 @@ function App() {
         "Nie można otworzyć bazy. Sprawdź ustawienia pamięci przeglądarki.",
       ),
     );
-    const handler = () => setUpdate(true);
-    window.addEventListener("app-update", handler);
-    return () => window.removeEventListener("app-update", handler);
   }, []);
   async function action(fn: () => Promise<void>) {
     if (busy) return;
@@ -347,12 +337,15 @@ function App() {
             {notice}
           </div>
         )}
-        {update && (
-          <div className="notice">
-            Dostępna aktualizacja. Zakończ trening i zamknij wszystkie okna
-            aplikacji, następnie otwórz ponownie.
-          </div>
-        )}
+        <AppUpdater
+          disabled={busy || !ready}
+          hasUnsavedChanges={
+            !!editing ||
+            planDirty ||
+            tab === "Dziennik" ||
+            (tab === "Trening" && !active)
+          }
+        />
         {!ready ? (
           <p>Otwieranie lokalnej bazy…</p>
         ) : (

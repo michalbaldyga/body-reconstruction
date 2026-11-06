@@ -29,7 +29,7 @@ Workflow `.github/workflows/pages.yml` testuje i buduje aplikację z bazą `/bod
 
 Darmowy GitHub Pages wymaga publicznego repozytorium. Adres docelowy: https://michalbaldyga.github.io/body-reconstruction/ — sam zapis adresu w dokumentacji nie potwierdza udanego wdrożenia; sprawdź wynik workflow.
 
-Na iPhonie otwórz adres HTTPS w Safari → Udostępnij → Dodaj do ekranu początkowego. Po pierwszym pobraniu aplikacja obsługuje pracę offline. Aktualizacja może wymagać zamknięcia wszystkich kart aplikacji i ponownego otwarcia. Zachowanie na rzeczywistym Safari wymaga sprawdzenia na urządzeniu.
+Na iPhonie otwórz adres HTTPS w Safari → Udostępnij → Dodaj do ekranu początkowego. Po pierwszym pobraniu aplikacja obsługuje pracę offline. Przycisk „Odśwież aplikację” nad treścią sprawdza aktualizację, aktywuje nową wersję offline i przeładowuje aplikację bez kasowania lokalnej bazy. Wymaga internetu; podczas zapisu danych jest niedostępny. Przed odrzuceniem otwartego formularza pojawia się potwierdzenie. Zachowanie na rzeczywistym Safari wymaga sprawdzenia na urządzeniu.
 
 ## Korzystanie
 

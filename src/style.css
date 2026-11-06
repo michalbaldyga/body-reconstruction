@@ -857,3 +857,16 @@ a {
     font-size: 11px;
   }
 }
+
+.app-updater {
+  margin: 16px 0;
+}
+.app-updater button {
+  font-size: 12px;
+  padding: 10px 14px;
+}
+.app-updater p {
+  font-size: 12px;
+  margin: 8px 0;
+  letter-spacing: normal;
+}
