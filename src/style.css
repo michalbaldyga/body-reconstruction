@@ -459,31 +459,6 @@ textarea {
 .history-row small {
   color: #a8bbb0;
 }
-.chart {
-  display: flex;
-  align-items: flex-end;
-  gap: 12px;
-  overflow: auto;
-  min-height: 165px;
-  padding-bottom: 25px;
-}
-.bar-group {
-  position: relative;
-  display: flex;
-  align-items: flex-end;
-  gap: 3px;
-  min-width: 35px;
-}
-.bar-group > span {
-  width: 8px;
-  border-radius: 3px 3px 0 0;
-}
-.bar-group small {
-  position: absolute;
-  bottom: -22px;
-  font-size: 8px;
-  white-space: nowrap;
-}
 summary {
   cursor: pointer;
   font-size: 14px;
@@ -869,4 +844,46 @@ a {
   font-size: 12px;
   margin: 8px 0;
   letter-spacing: normal;
+}
+
+.pain-chart h3 {
+  margin: 0;
+  font-size: 18px;
+}
+.pain-chart svg {
+  display: block;
+  width: 100%;
+  overflow: visible;
+  touch-action: pan-y;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.pain-chart svg:focus-visible {
+  outline: 2px solid #d89c52;
+  outline-offset: 4px;
+  border-radius: 4px;
+}
+.pain-chart svg text {
+  fill: #afc1b7;
+  font-size: 11px;
+}
+.pain-chart-grid {
+  stroke: #34483f;
+  stroke-width: 1;
+}
+.pain-chart-reading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 40px;
+  margin: 12px 0;
+}
+.pain-chart-reading strong {
+  font-size: 28px;
+  white-space: nowrap;
+}
+.pain-chart-reading small {
+  font-size: 14px;
+  margin-left: 2px;
 }

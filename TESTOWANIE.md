@@ -17,3 +17,6 @@ W środowisku chmurowym można użyć zainstalowanego systemowego Chromium przez
 
 
 `e2e/update.spec.ts` sprawdza rzeczywistą instalację i aktywację nowej wersji service workera w otwartej aplikacji, zachowanie treningu i planu, ponowne działanie offline oraz stałą obecność przycisku wyłącznie na dole zakładki Dane. Test tymczasowo zmienia wygenerowane pliki `dist` i przywraca je w `finally`; testy uruchamiamy z jednym workerem.
+
+
+`e2e/pain-charts.spec.ts` sprawdza trzy osobne wykresy, brak danych i pojedynczy punkt, rzeczywiste odstępy dat, luki w pomiarach, obsługę klawiatury i przesuwanie palcem przez zdarzenia dotykowe Chromium (CDP). Testy używają wyłącznie danych syntetycznych. Działanie na fizycznym Safari wymaga sprawdzenia na urządzeniu.

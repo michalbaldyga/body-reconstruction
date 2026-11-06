@@ -37,7 +37,7 @@ Na iPhonie otwórz adres HTTPS w Safari → Udostępnij → Dodaj do ekranu pocz
 - Baza: 30 ćwiczeń nóg z wyszukiwarką i filtrem sprzętu. Ćwiczenia z gumą mają pole notatki na opis oporu; ćwiczenia jednostronne opisują powtórzenia na stronę.
 - Trening: wybór szablonu i modyfikacje tylko na tę sesję; zamiana jest dostępna również po rozpoczęciu. Nowe ćwiczenie po zamianie ma puste obciążenie i powtórzenia — nie przenosimy kilogramów z innej maszyny. Wpisy serii dla obu kończyn są wspólne; rozpoczętą sesję można wznowić.
 - Każda sesja zachowuje własną kopię planu. Edycja lub usunięcie szablonu nie zmienia historii. Propozycje progresji dotyczą wyłącznie czterech pierwotnych ćwiczeń; nowe ćwiczenia ustawia się ręcznie.
-- Historia: dodawanie wcześniejszych treningów, edycja i usuwanie zapisów oraz filtr według ćwiczenia.
+- Historia: dodawanie wcześniejszych treningów, edycja i usuwanie zapisów oraz filtr według ćwiczenia. Trzy osobne wykresy liniowe bólu (ostatnie 14 pomiarów, skala 0–10) pozwalają odczytywać datę, godzinę i wartość przesunięciem palca, myszą lub strzałkami. Odstępy na osi odpowiadają dniom; linia przerywana oznacza lukę w pomiarach.
 - Kalendarz: zielona kropka oznacza ukończony trening, pomarańczowa pomiar, obwódka trening w trakcie. Wybrany dzień otwiera formularze.
 - Dziennik: codzienna ocena z datą, godziną i kontekstem. Wpisy można poprawić lub usunąć.
 - Dane: eksport JSON v2 obejmuje treningi, pomiary i szablony. Import przyjmuje również stare kopie v1 i wymaga potwierdzenia zastąpienia całej bazy. Aktualizacja zachowuje istniejącą bazę i dodaje tabelę szablonów.

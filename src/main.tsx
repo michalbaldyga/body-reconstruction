@@ -23,6 +23,7 @@ import {
 import "./style.css";
 import { SessionFields } from "./SessionFields";
 import { Plans, PlanComposer } from "./Plans";
+import { PainCharts } from "./PainCharts";
 import { AppUpdater } from "./AppUpdater";
 import { Calendar } from "./Calendar";
 import {
@@ -848,34 +849,7 @@ function App() {
                 <p className="intro">
                   Twoje rzeczywiste wpisy. Brak pomiaru pozostaje brakiem.
                 </p>
-                <section className="panel">
-                  <h2>Ból · ostatnie 14 wpisów</h2>
-                  <div
-                    className="chart"
-                    role="img"
-                    aria-label="Wykres bólu z ostatnich 14 wpisów"
-                  >
-                    {logs.slice(-14).map((l) => (
-                      <div className="bar-group" key={l.id}>
-                        {l.values.map((n, i) => (
-                          <span
-                            key={i}
-                            title={`${l.date} ${sites[i]}: ${n}/10`}
-                            style={{
-                              height: `${Math.max(2, n * 12)}px`,
-                              background: ["#285647", "#91ad6b", "#d6a06a"][i],
-                            }}
-                          />
-                        ))}
-                        <small>{l.date.slice(5)}</small>
-                      </div>
-                    ))}
-                  </div>
-                  <p className="footnote">
-                    Zielony: Achilles · jasny: PHT · piaskowy: czworogłowy.
-                    Odstępy oznaczają kolejne wpisy, nie upływ dni.
-                  </p>
-                </section>
+                <PainCharts logs={logs} />
                 <h2>Pomiary</h2>
                 {!logs.length && (
                   <p>
