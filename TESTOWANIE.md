@@ -2,7 +2,7 @@
 
 Testy używają danych syntetycznych. Nie zawierają dokumentacji ani indywidualnego profilu użytkownika.
 
-Zakres: reguły i brakujące pomiary, walidacja importu, odtworzenie bazy, wspólna edycja serii, zgodność starszego formatu, daty historyczne, niedozwolone nakładanie treningów, kalendarz, zapis po odświeżeniu oraz działanie offline.
+Zakres: monitor bólu i brakujące pomiary, walidacja importu, odtworzenie bazy, wspólna edycja serii, zgodność starszego formatu, daty historyczne, niedozwolone nakładanie treningów, kalendarz, zapis po odświeżeniu oraz działanie offline.
 
 Komendy: `npm test`, `npm run build`, `npx playwright test`.
 

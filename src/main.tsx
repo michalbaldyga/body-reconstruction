@@ -3,7 +3,6 @@ import { createRoot } from "react-dom/client";
 import { db, exportBackup, importBackup } from "./db";
 import {
   sites,
-  exercises,
   exerciseCatalog,
   defaultTemplate,
   templateSchema,
@@ -12,7 +11,7 @@ import {
   replaceSessionExercise,
   type WorkoutTemplate,
   day,
-  suggest,
+  painMonitor,
   newSession,
   sessionSchema,
   logSchema,
@@ -44,8 +43,6 @@ if (import.meta.env.PROD && "serviceWorker" in navigator)
     .catch(() => {});
 const fmt = (d: string) =>
   new Date(d).toLocaleDateString("pl-PL", { day: "numeric", month: "short" });
-const weight = (n: number) =>
-  n === 0 ? "masa ciała" : `${n.toLocaleString("pl-PL")} kg`;
 function App() {
   const [tab, setTab] = useState("Dzisiaj"),
     [logs, setLogs] = useState<PainLog[]>([]),
@@ -122,7 +119,7 @@ function App() {
       setEditing(null);
       setTab("Historia");
       setNotice(
-        "Trening zapisany. Historia, kalendarz i propozycje zostały przeliczone.",
+        "Trening zapisany. Historia, kalendarz i monitor bólu zostały zaktualizowane.",
       );
     });
   }
@@ -222,7 +219,7 @@ function App() {
       if (
         prior &&
         !confirm(
-          "Zastąpić wpis z tego dnia? Zależne sugestie zostaną przeliczone.",
+          "Zastąpić wpis z tego dnia? Monitor bólu zostanie zaktualizowany.",
         )
       )
         return;
@@ -232,7 +229,6 @@ function App() {
   }
   async function begin() {
     await action(async () => {
-      if (hours < 72) throw Error("Od ostatniej sesji nie minęły 72 godziny.");
       const selected = templateSchema.parse(workout);
       await db.sessions.add(
         sessionSchema.parse(newSession({}, new Date().toISOString(), selected)),
@@ -362,7 +358,7 @@ function App() {
                       Jeden krok dalej.
                     </h2>
                     <p>
-                      2 sesje tygodniowo · minimum 72 h przerwy
+                      Twój plan i monitor bólu
                       <br />
                       {sites.join(" · ")}
                     </p>
@@ -417,17 +413,9 @@ function App() {
                   <article>
                     <p className="eyebrow">REGENERACJA</p>
                     <strong>
-                      {hours === Infinity
-                        ? "Gotowy"
-                        : hours >= 72
-                          ? "72 h ✓"
-                          : `${Math.ceil(72 - hours)} h`}
+                      {hours === Infinity ? "—" : `${Math.floor(hours)} h`}
                     </strong>
-                    <p>
-                      {hours >= 72
-                        ? "Odstęp od ostatniej sesji spełniony"
-                        : "Do minimalnej przerwy między sesjami"}
-                    </p>
+                    <p>Czas od ostatniego treningu</p>
                   </article>
                 </div>
                 <section className="section-title">
@@ -556,7 +544,7 @@ function App() {
                 <p className="intro">
                   {active
                     ? "Każda zmiana jest zapisywana na urządzeniu. Możesz zamknąć aplikację i wrócić."
-                    : "Sprawdź propozycje i zatwierdź dawki. Jeden wpis serii dotyczy obu nóg."}
+                    : "Sprawdź monitor bólu i ustaw dawki. Jeden wpis serii dotyczy obu nóg."}
                 </p>
                 {active ? (
                   <>
@@ -627,10 +615,74 @@ function App() {
                 ) : (
                   <>
                     <div className="notice">
-                      {hours < 72
-                        ? `Pozostało ${Math.ceil(72 - hours)} h do minimalnego odstępu.`
-                        : "Minimalny odstęp spełniony. Wybieraj dwa dni w tygodniu; nie trenuj automatycznie co 72 h."}
+                      {last
+                        ? `Od ostatniego treningu minęło ${Math.floor(hours)} h.`
+                        : "Brak poprzednich treningów."}
                     </div>
+                    <section
+                      className="panel"
+                      aria-label="Monitor bólu po ostatnim treningu"
+                    >
+                      <h2>Monitor bólu po ostatnim treningu</h2>
+                      {last ? (
+                        <>
+                          <p>
+                            Ostatni trening: {fmt(last.started)}. Pomiary z dnia
+                            treningu oraz poranków jeden i dwa dni później
+                            (około 24 i 48 h).
+                          </p>
+                          <div className="grid three">
+                            {painMonitor(last, logs).map(
+                              ({ date, log }, index) => (
+                                <article key={date}>
+                                  <h3>
+                                    {
+                                      [
+                                        "Przed treningiem",
+                                        "Po około 24 h",
+                                        "Po około 48 h",
+                                      ][index]
+                                    }
+                                  </h3>
+                                  <p>{fmt(date + "T12:00:00")}</p>
+                                  {log ? (
+                                    <>
+                                      {sites.map((site, i) => (
+                                        <p key={site}>
+                                          {site}:{" "}
+                                          <strong>{log.values[i]} / 10</strong>
+                                        </p>
+                                      ))}
+                                      <p>
+                                        Godzina:{" "}
+                                        {new Date(log.at).toLocaleTimeString(
+                                          "pl-PL",
+                                          {
+                                            hour: "2-digit",
+                                            minute: "2-digit",
+                                          },
+                                        )}{" "}
+                                        · Kontekst:{" "}
+                                        {log.context || "Brak danych"}
+                                      </p>
+                                      {log.note && <p>{log.note}</p>}
+                                    </>
+                                  ) : (
+                                    <p>Brak danych</p>
+                                  )}
+                                </article>
+                              ),
+                            )}
+                          </div>
+                        </>
+                      ) : (
+                        <p>Brak ukończonego treningu do porównania.</p>
+                      )}
+                      <p>
+                        Samodzielnie wybierz, czy zwiększyć, zmniejszyć, czy
+                        pozostawić obciążenie.
+                      </p>
+                    </section>
                     <section className="panel">
                       <label>
                         Szablon treningu
@@ -675,57 +727,8 @@ function App() {
                         setWorkout({ ...workout, entries })
                       }
                     />
-                    <details className="panel">
-                      <summary>
-                        Propozycje dla ćwiczeń z planu początkowego
-                      </summary>
-                      {workout.entries
-                        .filter((entry) =>
-                          exercises.some((e) => e.id === entry.exerciseId),
-                        )
-                        .map((entry) => {
-                          const exercise = exercises.find(
-                            (e) => e.id === entry.exerciseId,
-                          )!;
-                          const rec = suggest(exercise, sessions, logs);
-                          return (
-                            <div key={entry.exerciseId}>
-                              <h3>{exercise.name}</h3>
-                              <p>{rec.reason}</p>
-                              {rec.dose && entry.sets === 3 && (
-                                <button
-                                  type="button"
-                                  className="text-button"
-                                  onClick={() => {
-                                    if (
-                                      confirm(
-                                        "Potwierdzasz tolerancję, brak utrzymującego się pogorszenia i wybór tej propozycji?",
-                                      )
-                                    )
-                                      setWorkout({
-                                        ...workout,
-                                        entries: workout.entries.map((e) =>
-                                          e.exerciseId === entry.exerciseId
-                                            ? { ...e, ...rec.dose! }
-                                            : e,
-                                        ),
-                                      });
-                                  }}
-                                >
-                                  Zastosuj: {weight(rec.dose.weight)} · 3 ×{" "}
-                                  {rec.dose.reps}
-                                </button>
-                              )}
-                            </div>
-                          );
-                        })}
-                      <p>
-                        Nowe ćwiczenia: ręczne ustawianie obciążeń, bez
-                        automatycznej progresji.
-                      </p>
-                    </details>
                     <button
-                      disabled={busy || hours < 72 || !workout.entries.length}
+                      disabled={busy || !workout.entries.length}
                       onClick={begin}
                     >
                       Zatwierdź dawki i rozpocznij
@@ -796,9 +799,8 @@ function App() {
                       />
                     </label>
                     <p className="footnote">
-                      Historyczne wpisy odzwierciedlają rzeczywistość: odstęp 72
-                      h nie blokuje ich zapisu. Przyszłe i nakładające się
-                      treningi nie są dozwolone.
+                      Wpisz rzeczywiste godziny treningu. Przyszłe i nakładające
+                      się treningi nie są dozwolone.
                     </p>
                   </section>
                   <SessionFields

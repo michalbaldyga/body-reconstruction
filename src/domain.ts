@@ -209,218 +209,20 @@ export function day(at: string | Date) {
   const d = new Date(at);
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
-function nextDay(at: string) {
-  const d = new Date(at);
-  d.setDate(d.getDate() + 1);
-  return day(d);
-}
-export type Reaction = {
-  kind: "stable" | "hold" | "spike" | "unknown";
-  delta?: number;
-  reason: string;
-};
-export function reaction(s: Session, logs: PainLog[], site: number): Reaction {
-  const before = logs.find((l) => l.date === day(s.started)),
-    after = logs.find((l) => l.date === nextDay(s.started));
-  if (
-    !s.ended ||
-    !before ||
-    !after ||
-    new Date(before.at) > new Date(s.started) ||
-    new Date(after.at) <= new Date(s.ended)
-  )
-    return {
-      kind: "unknown",
-      reason: "Brak pary pomiarów: rano przed i rano po sesji.",
-    };
-  if (!before.context || before.context !== after.context)
-    return {
-      kind: "unknown",
-      reason: "Brak porównywalnego kontekstu pomiarów.",
-    };
-  const base = before.values[site],
-    delta = after.values[site] - base;
-  if (delta > 2)
-    return {
-      kind: "spike",
-      delta,
-      reason: `Wzrost +${delta}: sprawdź utrzymywanie się objawów ponad 24 h od sesji; wstrzymaj progresję.`,
-    };
-  if (delta === 2)
-    return {
-      kind: "hold",
-      delta,
-      reason:
-        "Wzrost +2: utrzymanie dawki. Powtórzenie po kolejnej sesji wymaga redukcji.",
-    };
-  if (delta === 1 && base > 2)
-    return {
-      kind: "hold",
-      delta,
-      reason: "Wzrost +1 przy bazie ≥3: wstrzymanie progresji.",
-    };
-  return {
-    kind: "stable",
-    delta,
-    reason: `Reakcja akceptowana (${delta > 0 ? "+" : ""}${delta}).`,
-  };
-}
-export function doseOf(s: Session, e: Exercise): Dose | undefined {
-  const rows = s.sets.filter((x) => x.exerciseId === e.id);
-  if (
-    rows.length !== (e.unilateral ? 6 : 3) ||
-    rows.some((x) => !x.done || x.reps < 1)
-  )
-    return;
-  if (rows.some((x) => x.weight !== rows[0].weight || x.reps !== rows[0].reps))
-    return;
-  return { weight: rows[0].weight, reps: rows[0].reps };
-}
-export function same(a: Dose, b: Dose) {
-  return a.weight === b.weight && a.reps === b.reps;
-}
-export function suggest(
-  e: Exercise,
-  sessions: Session[],
-  logs: PainLog[],
-  now = new Date(),
-) {
-  if (!exercises.some((original) => original.id === e.id))
-    return {
-      status: "Ręcznie",
-      reason:
-        "Ustaw obciążenie i powtórzenia samodzielnie. Bez automatycznej progresji.",
-      dose: undefined,
-    };
-  const completed = sessions
-    .filter((s) => s.ended && s.sets.some((row) => row.exerciseId === e.id))
-    .sort((a, b) => a.started.localeCompare(b.started));
-  const last = completed.at(-1),
-    dose = last ? doseOf(last, e) : { weight: e.weight, reps: e.reps };
-  const hold = (reason: string, status = "Utrzymaj", next = dose) => ({
-    status,
-    reason,
-    dose: next,
+// Calendar days follow the same local date convention as the morning diary.
+export function painMonitor(session: Session, logs: PainLog[]) {
+  return [0, 1, 2].map((offset) => {
+    const date = new Date(session.started);
+    date.setDate(date.getDate() + offset);
+    const dateKey = day(date);
+    const log = logs.find(
+      (entry) =>
+        entry.date === dateKey &&
+        (offset !== 0 ||
+          new Date(entry.at).getTime() <= new Date(session.started).getTime()),
+    );
+    return { date: dateKey, log };
   });
-  if (!dose)
-    return hold(
-      "Ostatni trening ma różne dawki między seriami lub nogami. Sprawdź go ręcznie.",
-      "Przegląd",
-    );
-  if (!last)
-    return hold("Plan startowy. Brak historycznych treningów i pomiarów.");
-  const related = e.sites[0],
-    r = reaction(last, logs, related),
-    prev = completed.at(-2),
-    pr = prev ? reaction(prev, logs, related) : undefined;
-  if (r.kind === "spike")
-    return hold(
-      r.reason + " MVP wymaga ręcznej decyzji o regresji.",
-      "Sprawdź reakcję",
-    );
-  if (r.delta === 2 && pr?.delta === 2) {
-    const tolerated: Dose[] = [];
-    for (let i = 1; i < completed.length - 1; i++) {
-      const a = completed[i - 1],
-        b = completed[i],
-        ad = doseOf(a, e),
-        bd = doseOf(b, e);
-      if (
-        ad &&
-        bd &&
-        same(ad, bd) &&
-        reaction(a, logs, related).kind === "stable" &&
-        reaction(b, logs, related).kind === "stable"
-      )
-        tolerated.push(bd);
-    }
-    const target = tolerated.reverse().find((d) => !same(d, dose));
-    return target
-      ? hold(
-          "Dwa kolejne wzrosty +2. Proponowany powrót do historycznej tolerowanej dawki; potwierdź ocenę całego tygodnia.",
-          "Cofnij dawkę",
-          target,
-        )
-      : hold(
-          "Dwa kolejne wzrosty +2. Brak potwierdzonej wcześniejszej dawki — wybierz ją ręcznie.",
-          "Przegląd",
-        );
-  }
-  if (r.kind !== "stable")
-    return hold(r.reason, r.kind === "unknown" ? "Brak danych" : "Utrzymaj");
-  const after = logs.find((l) => l.date === nextDay(last.started));
-  const recent = logs
-    .filter((l) => new Date(l.at).getTime() >= now.getTime() - 7 * 864e5)
-    .sort((a, b) => a.at.localeCompare(b.at));
-  if (
-    recent.length >= 3 &&
-    recent
-      .slice(-3)
-      .every(
-        (l, i, arr) =>
-          i === 0 || l.values[related] > arr[i - 1].values[related],
-      )
-  )
-    return hold("Rosnący trend trzech kolejnych ocen. Nie zwiększaj dawki.");
-  if (
-    after &&
-    recent.some(
-      (l) => l.date > after.date && l.values[related] > after.values[related],
-    )
-  )
-    return hold(
-      "Nowszy wpis wskazuje pogorszenie. Sprawdź reakcję przed progresją.",
-    );
-  const priorDose = prev ? doseOf(prev, e) : undefined;
-  const pair = !!(
-    prev &&
-    priorDose &&
-    same(priorDose, dose) &&
-    (pr?.kind === "stable" || pr?.delta === 2)
-  );
-  if (e.id === "calf" && dose.weight > 0 && dose.reps === 6) {
-    return hold(
-      "Stabilna reakcja po obciążonych wspięciach: można przejść do 8 na następnej sesji. Potwierdź brak utrzymującego się pogorszenia.",
-      "Możliwa progresja",
-      { ...dose, reps: 8 },
-    );
-  }
-  if (!pair) return hold("Potrzebne dwie ocenione sesje na tej samej dawce.");
-  const end = new Date(last.started),
-    start = new Date(end);
-  start.setDate(start.getDate() - 6);
-  const dates = Array.from({ length: 7 }, (_, i) => {
-    const d = new Date(start);
-    d.setDate(d.getDate() + i);
-    return day(d);
-  });
-  if (dates.some((d) => !logs.some((l) => l.date === d)))
-    return hold("Do oceny tygodnia brakuje codziennych wpisów.", "Brak danych");
-  const week = logs
-    .filter((l) => dates.includes(l.date))
-    .sort((a, b) => a.date.localeCompare(b.date));
-  if (week.some((l) => !l.context || l.context !== week[0].context))
-    return hold(
-      "Pomiary tygodnia mają różny lub nieznany kontekst. Potrzebna ręczna ocena.",
-      "Przegląd",
-    );
-  if (after && after.values[related] > week[0].values[related] + 1)
-    return hold(
-      "Ból po ostatniej sesji pozostaje powyżej poziomu wyjściowego tygodnia. Potrzebna ocena utrzymującego się pogorszenia.",
-    );
-  if (now.getTime() - new Date(prev!.started).getTime() < 6 * 864e5)
-    return hold("Zaczekaj na zakończenie tygodniowej oceny.");
-  const next =
-    e.id === "calf" && dose.weight === 0 && dose.reps < 8
-      ? { ...dose, reps: dose.reps + 1 }
-      : dose.reps < 8
-        ? { ...dose, reps: 8 }
-        : { weight: dose.weight + e.step, reps: 6 };
-  return hold(
-    "Dwie ocenione sesje i komplet wpisów. Potwierdź brak utrzymującego się pogorszenia i tolerancję przed zastosowaniem.",
-    "Możliwa progresja",
-    next,
-  );
 }
 export function newSession(
   doses: Record<string, Dose>,
@@ -434,7 +236,7 @@ export function newSession(
     id: crypto.randomUUID(),
     started: at,
     note: "",
-    ruleVersion: "0.1-conservative",
+    ruleVersion: "0.2-manual",
     ...(template
       ? {
           plan: structuredClone(plan),

@@ -61,7 +61,7 @@ test("poranny wpis, wznowienie i ukończenie sesji, kopia oraz offline", async (
   await expect(page.getByRole("status")).toContainText("Trening ukończony");
   await expect(
     page.getByRole("button", { name: "Zatwierdź dawki i rozpocznij" }),
-  ).toBeDisabled();
+  ).toBeEnabled();
   await page.getByRole("button", { name: "Dane", exact: true }).click();
   const downloadPromise = page.waitForEvent("download");
   await page

@@ -8,8 +8,6 @@ import {
   updatePairedSet,
   templateSchema,
   exerciseCatalog,
-  suggest,
-  exerciseById,
 } from "./domain";
 
 describe("Szablony i sesje", () => {
@@ -100,8 +98,5 @@ describe("Szablony i sesje", () => {
         ),
       }).success,
     ).toBe(false);
-  });
-  it("nie proponuje progresji nowych ćwiczeń", () => {
-    expect(suggest(exerciseById("leg-press"), [], []).dose).toBeUndefined();
   });
 });
