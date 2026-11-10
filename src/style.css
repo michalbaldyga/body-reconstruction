@@ -887,3 +887,110 @@ a {
   font-size: 14px;
   margin-left: 2px;
 }
+
+.timer-settings {
+  display: grid;
+  gap: 12px;
+}
+.timer-field {
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  border: 1px solid #476052;
+  border-left: 4px solid #9bdbb4;
+  border-radius: 10px;
+  padding: 14px 16px;
+  margin: 0;
+  font-size: 15px;
+}
+.timer-field small {
+  display: block;
+  font-size: 11px;
+  color: #afc1b7;
+  margin-top: 4px;
+}
+.timer-field input {
+  width: 100px;
+  font-size: 22px;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+.timer-hold {
+  border-color: #c4a166;
+}
+.timer-move2 {
+  border-color: #8ca8e6;
+}
+.timer-rest,
+.timer-prepare {
+  border-color: #64c5cf;
+}
+.timer-settings + label {
+  margin-top: 20px;
+}
+.timer-summary {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+}
+.timer-summary span,
+.timer-summary strong {
+  display: block;
+}
+.timer-summary strong {
+  font-size: 40px;
+  font-variant-numeric: tabular-nums;
+}
+.timer-display {
+  text-align: center;
+  border-top: 5px solid #9bdbb4;
+}
+.timer-clock {
+  font-size: clamp(64px, 17vw, 120px);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.4;
+}
+.timer-counts {
+  display: flex;
+  justify-content: center;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+.timer-counts b {
+  display: block;
+  margin-top: 8px;
+  font-size: 24px;
+}
+.timer-display progress {
+  width: 100%;
+  margin-top: 24px;
+  accent-color: #9bdbb4;
+  height: 12px;
+}
+.timer-display .actions {
+  justify-content: center;
+}
+.timer-display.timer-hold {
+  border-top-color: #c4a166;
+}
+.timer-display.timer-move2 {
+  border-top-color: #8ca8e6;
+}
+.timer-display.timer-rest,
+.timer-display.timer-prepare {
+  border-top-color: #64c5cf;
+}
+@media (max-width: 700px) {
+  nav {
+    display: flex;
+    overflow-x: auto;
+  }
+  nav button {
+    flex: 0 0 58px;
+  }
+  .timer-field {
+    padding: 12px;
+  }
+}

@@ -24,6 +24,7 @@ import { SessionFields } from "./SessionFields";
 import { Plans, PlanComposer } from "./Plans";
 import { PainCharts } from "./PainCharts";
 import { AppUpdater } from "./AppUpdater";
+import { IntervalTimer } from "./IntervalTimer";
 import { Calendar } from "./Calendar";
 import {
   visibleSets,
@@ -295,6 +296,7 @@ function App() {
             "Kalendarz",
             "Historia",
             "Plany",
+            "Zegar HSR",
             "Dane",
           ].map((t, i) => (
             <button
@@ -303,7 +305,7 @@ function App() {
               className={tab === t ? "selected" : ""}
               onClick={() => navigate(t)}
             >
-              <span>{["◉", "↗", "＋", "▦", "◷", "☷", "◇"][i]}</span>
+              <span>{["◉", "↗", "＋", "▦", "◷", "☷", "◴", "◇"][i]}</span>
               {t}
             </button>
           ))}
@@ -338,6 +340,7 @@ function App() {
           <p>Otwieranie lokalnej bazy…</p>
         ) : (
           <>
+            <IntervalTimer visible={tab === "Zegar HSR"} />
             {tab === "Dzisiaj" && (
               <>
                 <section className="heading">
